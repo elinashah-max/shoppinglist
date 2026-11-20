@@ -1,13 +1,3 @@
-const categories = ['All finds', 'Going-out tops', 'Beauty & nails', 'Accessories', 'Room finds'];
-const catalog = [
-  ['1', 'The bow-strap cami', categories[1], 'Pinterest edit', 'Urban Outfitters', 'https://www.urbanoutfitters.com/search?q=crochet%20cami'],
-  ['2', 'Cherry-gloss French tips', categories[2], 'Pinterest edit', 'Ulta Beauty', 'https://www.ulta.com/search?search=glossy%20pink%20press%20on%20nails'],
-  ['3', 'The cherry shoulder bag', categories[3], 'Pinterest edit', 'Coach', 'https://www.coach.com/search?q=red%20shoulder%20bag'],
-  ['4', 'Sculptural gold hoops', categories[3], 'TikTok edit', 'Nordstrom', 'https://www.nordstrom.com/sr?keyword=chunky%20gold%20hoops'],
-  ['5', 'Pink gingham bedding', categories[4], 'Pinterest edit', 'Target', 'https://www.target.com/s?searchTerm=pink%20gingham%20bedding'],
-  ['6', 'The after-hours halter', categories[1], 'Style edit', 'ASOS', 'https://www.asos.com/us/search/?q=brown%20sequin%20halter%20top']
-].map(([id, title, category, source, store, url]) => ({id, title, category, source, store, url, image: 'assets/' + id + '.webp'}));
-
 const byId = id => document.getElementById(id);
 function read(key) {
   try {
@@ -23,6 +13,12 @@ const links = read('pin-and-tell-links');
 let view = 'discover';
 let category = categories[0];
 let statusTimer;
+const edits = [
+  {title: 'Friday night', image: 6, ids: ['1', '3', '4', '6', '7'], description: 'Going-out tops, gold hoops, and a good heel.'},
+  {title: 'Cherry on top', image: 2, ids: ['2', '3', '9', '12'], description: 'Glossy nails and little hits of red.'},
+  {title: 'Room refresh', image: 5, ids: ['5', '10'], description: 'Playful pieces for your space.'}
+];
+let currentEdit;
 
 function announce(message) {
   byId('status').textContent = message;
@@ -92,18 +88,34 @@ function card(item) {
   media.append(imageLink, node('span', 'source', item.source), heart);
   article.append(media, node('h3', '', item.title), node('p', '', item.category),
     externalLink(item, 'shop', item.image ? 'Shop similar at ' + item.store : 'Open link'));
+  if (!item.image) {
+    const similar = externalLink({
+      url: 'https://www.google.com/search?tbm=shop&q=' + encodeURIComponent(item.title)
+    }, 'shop similar', 'Find similar');
+    article.append(similar);
+  }
   return article;
 }
 
 function render() {
   const personal = view === 'saved';
   const query = byId('search').value.toLowerCase().trim();
+  const source = byId('source-filter').value;
+  const order = byId('sort').value;
   const items = (personal ? [...links, ...catalog].filter(item => saved.has(item.id)) : catalog)
-    .filter(item => (category === categories[0] || category === item.category)
+    .filter(item => (!currentEdit || currentEdit.ids.includes(item.id))
+      && (!source || source === item.source)
+      && (category === categories[0] || category === item.category)
       && [item.title, item.category, item.source, item.store].join(' ').toLowerCase().includes(query));
+  if (order === 'az') items.sort((a,b) => a.title.localeCompare(b.title));
+  if (order === 'category') items.sort((a, b) => a.category.localeCompare(b.category));
   byId('count').textContent = saved.size || '';
+  byId('results').textContent = items.length + (items.length === 1 ? ' find' : ' finds');
+  byId('source-filter').hidden = personal;
+  byId('edits-section').hidden = personal;
+  byId('clear-edit').hidden = !currentEdit;
   byId('kicker').textContent = personal ? 'YOUR COLLECTION' : 'THE DISCOVERY EDIT';
-  byId('section-title').textContent = personal ? 'Your saved board' : 'On our radar';
+  byId('section-title').textContent = personal ? 'Your saved board' : currentEdit?.title ?? 'On our radar';
   document.querySelectorAll('.nav').forEach(button => {
     const active = button.dataset.view === view;
     button.classList.toggle('active', active);
@@ -116,7 +128,10 @@ function render() {
     : 'No matches. Try a different search or category.';
 }
 
-function show(nextView) {
+function show(nextView, edit) {
+  currentEdit = edit;
+  byId('source-filter').value = '';
+  byId('sort').value = '';
   view = nextView;
   category = categories[0];
   byId('search').value = '';
@@ -149,6 +164,21 @@ function platform(hostname) {
 document.querySelectorAll('.nav').forEach(button => button.addEventListener('click', () => show(button.dataset.view)));
 byId('explore').addEventListener('click', () => show('discover'));
 byId('search').addEventListener('input', render);
+byId('source-filter').addEventListener('change', render);
+byId('sort').addEventListener('change', render);
+byId('clear-edit').addEventListener('click', () => show('discover'));
+for (const edit of edits) {
+  const button = node('button', 'edit-card');
+  const image = node('img');
+  image.src = 'assets/' + edit.image + '.webp';
+  image.alt = '';
+  image.loading = 'lazy';
+  const label = node('span', 'edit-label');
+  label.append(node('strong', '', edit.title), node('span', '', edit.description));
+  button.append(image, label);
+  button.addEventListener('click', () => show('discover', edit));
+  byId('edits').append(button);
+}
 const dialog = byId('link-dialog');
 const error = byId('link-error');
 byId('add').addEventListener('click', () => { error.textContent = ''; dialog.showModal(); });

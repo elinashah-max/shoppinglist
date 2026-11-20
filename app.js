@@ -51,10 +51,52 @@ function externalLink(item, className, label) {
   return link;
 }
 
+function shoppingSearch(title) {
+  return {url: 'https://www.google.com/search?tbm=shop&q=' + encodeURIComponent(title)};
+}
+
+function postEmbed(item) {
+  const {pathname} = new URL(item.url);
+  const pin = pathname.match(/^\/pin\/(?:[^/]*--)?(\d+)\/?$/);
+  const video = pathname.match(/^\/@[^/]+\/video\/(\d+)\/?$/);
+  if (item.source === 'Pinterest' && pin) return 'https://assets.pinterest.com/ext/embed.html?id=' + pin[1];
+  if (item.source === 'TikTok' && video) return 'https://www.tiktok.com/player/v1/' + video[1];
+  return '';
+}
+
+const preview = byId('preview-dialog');
+function previewPost(item) {
+  byId('preview-title').textContent = item.title;
+  const body = byId('post-preview');
+  const embed = postEmbed(item);
+  body.replaceChildren();
+  if (embed) {
+    const frame = node('iframe', 'post-frame');
+    frame.title = item.source + ' post';
+    frame.src = embed;
+    frame.referrerPolicy = 'strict-origin-when-cross-origin';
+    frame.allow = 'encrypted-media; fullscreen';
+    body.append(frame);
+  } else {
+    body.append(node('p', '', 'Open the original post to view this shared link.'));
+  }
+  const actions = byId('preview-actions');
+  actions.replaceChildren(externalLink(item, 'outline', 'Open on ' + item.source),
+    externalLink(shoppingSearch(item.title), 'outline', 'Find similar'));
+  if (item.productUrl) actions.prepend(externalLink({url: item.productUrl}, 'primary', 'Shop product'));
+  preview.showModal();
+}
+byId('close-preview').addEventListener('click', () => preview.close());
+preview.addEventListener('close', () => byId('post-preview').replaceChildren());
+
 function card(item) {
   const article = node('article', 'card');
   const media = node('div', 'card-media');
-  const imageLink = externalLink(item, item.image ? '' : 'placeholder', item.image ? '' : '✦');
+  const social = item.source === 'Pinterest' || item.source === 'TikTok';
+  const imageLink = social
+    ? node('button', 'post-tile ' + item.source.toLowerCase(), 'Preview ' + item.source + ' post')
+    : externalLink(item, item.image ? '' : 'placeholder', item.image ? '' : '✦');
+  if (social) imageLink.addEventListener('click', () => previewPost(item));
   imageLink.setAttribute('aria-label', 'Open ' + item.title);
   if (item.image) {
     const image = node('img');
@@ -86,13 +128,13 @@ function card(item) {
     announce(stored ? (selected ? 'Removed from your board' : 'Saved to your board') : 'Available for this session only');
   });
   media.append(imageLink, node('span', 'source', item.source), heart);
-  article.append(media, node('h3', '', item.title), node('p', '', item.category),
-    externalLink(item, 'shop', item.image ? 'Shop similar at ' + item.store : 'Open link'));
-  if (!item.image) {
-    const similar = externalLink({
-      url: 'https://www.google.com/search?tbm=shop&q=' + encodeURIComponent(item.title)
-    }, 'shop similar', 'Find similar');
-    article.append(similar);
+  article.append(media, node('h3', '', item.title), node('p', '', item.category));
+  if (item.image) {
+    article.append(externalLink(item, 'shop', 'Shop similar at ' + item.store));
+  } else {
+    const destination = item.productUrl ? {url: item.productUrl} : item;
+    article.append(externalLink(destination, 'shop', item.productUrl ? 'Shop product' : 'Open original'),
+      externalLink(shoppingSearch(item.title), 'shop similar', 'Find similar'));
   }
   return article;
 }
@@ -181,21 +223,52 @@ for (const edit of edits) {
 }
 const dialog = byId('link-dialog');
 const error = byId('link-error');
-byId('add').addEventListener('click', () => { error.textContent = ''; dialog.showModal(); });
+let importSource = '';
+function openImport(source = '') {
+  importSource = source;
+  error.textContent = '';
+  byId('import-title').textContent = source ? 'Import from ' + source : 'Add a link';
+  byId('import-help').textContent = source
+    ? 'Copy a public ' + (source === 'Pinterest' ? 'pin' : 'video') + ' link via Share and paste it here.'
+    : 'Save a Pinterest pin, TikTok video, or store page to your board.';
+  dialog.showModal();
+}
+function webUrl(value) {
+  try {
+    const url = new URL(value);
+    if (['http:', 'https:'].includes(url.protocol) && !url.username && !url.password) return url;
+  } catch {
+    return null;
+  }
+  return null;
+}
+byId('add').addEventListener('click', () => openImport());
+byId('import-pin').addEventListener('click', () => openImport('Pinterest'));
+byId('import-tiktok').addEventListener('click', () => openImport('TikTok'));
 byId('close').addEventListener('click', () => dialog.close());
 byId('link-form').addEventListener('submit', event => {
   event.preventDefault();
   const form = event.currentTarget;
   const data = new FormData(form);
-  const url = new URL(data.get('url'));
+  const url = webUrl(data.get('url'));
   const title = data.get('title').trim();
-  if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || !title) {
-    error.textContent = 'Enter a web link and a title.';
+  const product = data.get('product').trim();
+  const productUrl = product ? webUrl(product) : null;
+  if (!url || !title || (product && !productUrl)) {
+    error.textContent = 'Enter a title and valid web links.';
     return;
   }
-  const existing = links.find(item => item.url === url.href);
-  const id = existing?.id ?? crypto.randomUUID();
-  if (!existing) links.unshift({id, title, url: url.href, category: data.get('category'), source: platform(url.hostname)});
+  const source = platform(url.hostname);
+  if (importSource && source !== importSource) {
+    error.textContent = 'Paste a link from ' + importSource + '.';
+    return;
+  }
+  const match = links.findIndex(item => item.url === url.href);
+  const id = links[match]?.id ?? crypto.randomUUID();
+  const item = {id, title, url: url.href, category: data.get('category'), source,
+    productUrl: productUrl?.href};
+  if (match < 0) links.unshift(item);
+  else links[match] = item;
   saved.add(id);
   const stored = persist();
   form.reset();

@@ -32,3 +32,8 @@
 .preview-actions{margin-top:14px}
 .optional{font-size:12px;font-weight:500;color:var(--muted)}
 @media(max-width:730px){.social-strip{align-items:flex-start;flex-direction:column;padding:18px}.social-actions button{white-space:normal}}
+
+.more-row{text-align:center}
+.more-row:has(button:not([hidden])){margin-top:26px}
+.catalog-placeholder{display:grid!important;place-items:center;text-align:center;padding:48px 14px 28px;color:var(--wine);font:600 clamp(20px,2.5vw,35px)/1.1 'Playfair Display',Georgia,serif;background:linear-gradient(145deg,#fae8ed,#edcbd7)}
+.card:nth-child(3n) .catalog-placeholder{background:linear-gradient(145deg,#f9eee4,#ecd7c5)}

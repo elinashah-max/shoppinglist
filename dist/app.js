@@ -14,11 +14,13 @@ let view = 'discover';
 let category = categories[0];
 let statusTimer;
 const edits = [
-  {title: 'Friday night', image: 6, ids: ['1', '3', '4', '6', '7'], description: 'Going-out tops, gold hoops, and a good heel.'},
-  {title: 'Cherry on top', image: 2, ids: ['2', '3', '9', '12'], description: 'Glossy nails and little hits of red.'},
-  {title: 'Room refresh', image: 5, ids: ['5', '10'], description: 'Playful pieces for your space.'}
+  {title: 'Friday night', image: 6, ids: ['1', '3', '4', '6', '7', '13', '14', '16', '17', '18', '79', '94'], description: 'Going-out tops, gold hoops, and a good heel.'},
+  {title: 'Cherry on top', image: 2, ids: ['2', '3', '9', '12', '24', '37', '58', '80'], description: 'Glossy nails and little hits of red.'},
+  {title: 'Room refresh', image: 5, ids: ['5', '10', '57', '58', '59', '60', '61', '62'], description: 'Playful pieces for your space.'}
 ];
 let currentEdit;
+const pageSize = 24;
+let visibleLimit = pageSize;
 
 function announce(message) {
   byId('status').textContent = message;
@@ -95,7 +97,7 @@ function card(item) {
   const social = item.source === 'Pinterest' || item.source === 'TikTok';
   const imageLink = social
     ? node('button', 'post-tile ' + item.source.toLowerCase(), 'Preview ' + item.source + ' post')
-    : externalLink(item, item.image ? '' : 'placeholder', item.image ? '' : '✦');
+    : externalLink(item, item.image ? '' : item.store ? 'catalog-placeholder' : 'placeholder', item.image ? '' : item.store ? item.title : '✦');
   if (social) imageLink.addEventListener('click', () => previewPost(item));
   imageLink.setAttribute('aria-label', 'Open ' + item.title);
   if (item.image) {
@@ -129,7 +131,7 @@ function card(item) {
   });
   media.append(imageLink, node('span', 'source', item.source), heart);
   article.append(media, node('h3', '', item.title), node('p', '', item.category));
-  if (item.image) {
+  if (item.store) {
     article.append(externalLink(item, 'shop', 'Shop similar at ' + item.store));
   } else {
     const destination = item.productUrl ? {url: item.productUrl} : item;
@@ -139,7 +141,7 @@ function card(item) {
   return article;
 }
 
-function render() {
+function render({append = false} = {}) {
   const personal = view === 'saved';
   const query = byId('search').value.toLowerCase().trim();
   const source = byId('source-filter').value;
@@ -152,7 +154,11 @@ function render() {
   if (order === 'az') items.sort((a,b) => a.title.localeCompare(b.title));
   if (order === 'category') items.sort((a, b) => a.category.localeCompare(b.category));
   byId('count').textContent = saved.size || '';
-  byId('results').textContent = items.length + (items.length === 1 ? ' find' : ' finds');
+  const visible = items.slice(0, visibleLimit);
+  byId('results').textContent = visible.length < items.length
+    ? visible.length + ' of ' + items.length + ' finds'
+    : items.length + (items.length === 1 ? ' find' : ' finds');
+  byId('show-more').hidden = visible.length === items.length;
   byId('source-filter').hidden = personal;
   byId('edits-section').hidden = personal;
   byId('clear-edit').hidden = !currentEdit;
@@ -163,7 +169,9 @@ function render() {
     button.classList.toggle('active', active);
     button.setAttribute('aria-pressed', active);
   });
-  byId('grid').replaceChildren(...items.map(card));
+  const grid = byId('grid');
+  if (append) grid.append(...visible.slice(grid.children.length).map(card));
+  else grid.replaceChildren(...visible.map(card));
   byId('empty').hidden = items.length > 0;
   byId('empty').textContent = personal && saved.size === 0
     ? 'Save a find with the heart or add a link to start your board.'
@@ -172,6 +180,7 @@ function render() {
 
 function show(nextView, edit) {
   currentEdit = edit;
+  visibleLimit = pageSize;
   byId('source-filter').value = '';
   byId('sort').value = '';
   view = nextView;
@@ -188,6 +197,7 @@ function renderFilters() {
     button.setAttribute('aria-pressed', value === category);
     button.addEventListener('click', () => {
       category = value;
+      visibleLimit = pageSize;
       for (const filter of byId('filters').children) {
         filter.setAttribute('aria-pressed', filter === button);
       }
@@ -205,9 +215,19 @@ function platform(hostname) {
 
 document.querySelectorAll('.nav').forEach(button => button.addEventListener('click', () => show(button.dataset.view)));
 byId('explore').addEventListener('click', () => show('discover'));
-byId('search').addEventListener('input', render);
-byId('source-filter').addEventListener('change', render);
-byId('sort').addEventListener('change', render);
+function resetResults() {
+  visibleLimit = pageSize;
+  render();
+}
+byId('search').addEventListener('input', resetResults);
+byId('source-filter').addEventListener('change', resetResults);
+byId('sort').addEventListener('change', resetResults);
+byId('show-more').addEventListener('click', () => {
+  const next = byId('grid').children.length;
+  visibleLimit += pageSize;
+  render({append: true});
+  byId('grid').children[next]?.querySelector('a, button')?.focus();
+});
 byId('clear-edit').addEventListener('click', () => show('discover'));
 for (const edit of edits) {
   const button = node('button', 'edit-card');

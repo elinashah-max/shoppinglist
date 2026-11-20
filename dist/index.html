@@ -23,6 +23,10 @@
 <button id="explore" class="primary">Explore the edit</button></div>
 <div class="collage" aria-hidden="true"><div class="photo photo-one"><img src="assets/1.webp" alt=""><span>the going-out edit</span></div><div class="photo photo-two"><img src="assets/3.webp" alt=""><span>currently obsessed</span></div><span class="spark spark-one">✦</span><span class="spark spark-two">✧</span></div>
 </section>
+<section class="social-strip" aria-labelledby="social-title">
+<div><h2 id="social-title">Shop your feed</h2><p>Bring a pin or video you love. Add the store link if you have it, or search for a similar find.</p></div>
+<div class="social-actions"><button class="outline pinterest" id="import-pin">Import from Pinterest</button><button class="outline tiktok" id="import-tiktok">Import from TikTok</button></div>
+</section>
 <section id="edits-section" aria-labelledby="edits-title">
 <h2 id="edits-title">Shop by mood</h2>
 <div id="edits" class="edits"></div>
@@ -43,13 +47,19 @@
 </section>
 </main>
 <footer><a class="logo" href="./">pin<span>&</span>tell<span>.</span></a><span>Fashion, beauty & home finds worth saving.</span></footer>
-<dialog id="link-dialog">
-<form id="link-form"><div class="dialog-head"><h2>Add a link</h2><button type="button" id="close" aria-label="Close">×</button></div>
-<p>Save a Pinterest pin, TikTok video, or store page to your board.</p>
+<dialog id="link-dialog" aria-labelledby="import-title">
+<form id="link-form"><div class="dialog-head"><h2 id="import-title">Add a link</h2><button type="button" id="close" aria-label="Close">×</button></div>
+<p id="import-help">Save a Pinterest pin, TikTok video, or store page to your board.</p>
 <label>Link<input type="url" name="url" placeholder="https://…" required></label>
 <label>Title<input type="text" name="title" placeholder="e.g. Friday night top" maxlength="90" required></label>
 <label>Category<select name="category"><option>Going-out tops</option><option>Beauty & nails</option><option>Accessories</option><option>Room finds</option><option>Shoes</option><option>Outfits</option></select></label>
+<label>Store or product URL <span class="optional">Optional</span><input type="url" name="product" placeholder="https://…"></label>
 <p id="link-error" role="alert"></p><button class="primary" type="submit">Save to my board</button>
 </form></dialog>
+<dialog id="preview-dialog" aria-labelledby="preview-title">
+<div class="dialog-head"><h2 id="preview-title"></h2><button type="button" id="close-preview" aria-label="Close">×</button></div>
+<div id="post-preview"></div>
+<div class="preview-actions" id="preview-actions"></div>
+</dialog>
 <div id="status" role="status" aria-live="polite"></div>
 </body></html>

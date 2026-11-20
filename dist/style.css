@@ -19,3 +19,16 @@
 .result-controls select{background:white;border:1px solid var(--line);border-radius:22px;padding:7px 9px;max-width:100%;font-size:14px}
 .similar{margin-left:12px}
 @media(max-width:620px){.edits{grid-template-columns:1fr;gap:8px}.edit-card,.edit-label{min-height:105px}.edit-label strong{font-size:24px}}
+
+.social-strip{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-top:26px;padding:21px 27px;background:#f8e5ea;border-radius:16px}
+.social-strip h2{margin:0 0 7px;font-size:31px;letter-spacing:-.035em}
+.social-strip p{margin:0;color:var(--muted)}
+.social-actions,.preview-actions{display:flex;gap:9px;flex-wrap:wrap}
+.social-actions button{white-space:nowrap}
+.pinterest{background:#9b1941;color:white;border-color:#9b1941}
+.tiktok{background:#30222c;color:white;border-color:#30222c}
+.post-tile{display:grid;place-items:center;padding:40px 10px;width:100%;height:100%;border:0;font:600 24px 'Playfair Display',Georgia,serif}
+.post-frame{display:block;width:100%;height:min(480px,55vh);border:0;border-radius:12px;margin:14px 0}
+.preview-actions{margin-top:14px}
+.optional{font-size:12px;font-weight:500;color:var(--muted)}
+@media(max-width:730px){.social-strip{align-items:flex-start;flex-direction:column;padding:18px}.social-actions button{white-space:normal}}

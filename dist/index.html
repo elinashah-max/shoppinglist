@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Discover Pinterest-inspired fashion, beauty, and room finds.">
+<title>Pin & Tell | Shop your moodboard</title>
+<link rel="stylesheet" href="style.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+<header><div class="bar">
+<a class="logo" href="./">pin<span>&</span>tell<span>.</span></a>
+<nav aria-label="Main navigation"><button class="nav active" data-view="discover">Discover</button><button class="nav" data-view="saved">Saved <span id="count"></span></button></nav>
+<button class="outline" id="add">＋ <span>Add a link</span></button>
+</div></header>
+<main>
+<section class="hero" aria-labelledby="headline">
+<div class="intro"><div class="eyebrow"><span>✦</span> THE MOODBOARD, MADE SHOPPABLE</div>
+<h1 id="headline">Shop your<br><em>moodboard.</em></h1>
+<p>The going-out tops, glossy nails, and little room upgrades you keep pinning. Find them, save them, shop them.</p>
+<button id="explore" class="primary">Explore the edit</button></div>
+<div class="collage" aria-hidden="true"><div class="photo photo-one"><img src="assets/1.webp" alt=""><span>the going-out edit</span></div><div class="photo photo-two"><img src="assets/3.webp" alt=""><span>currently obsessed</span></div><span class="spark spark-one">✦</span><span class="spark spark-two">✧</span></div>
+</section>
+<section id="browse" aria-labelledby="section-title">
+<div class="section-top"><div><div class="eyebrow"><span>✦</span> <span id="kicker">THE DISCOVERY EDIT</span></div><h2 id="section-title">On our radar</h2></div><label class="search"><span aria-hidden="true">⌕</span><input type="search" id="search" placeholder="Search the edit" aria-label="Search finds"></label></div>
+<div class="filters" id="filters"></div>
+<div id="grid" class="grid"></div>
+<p class="empty" id="empty" hidden></p>
+</section>
+</main>
+<footer><a class="logo" href="./">pin<span>&</span>tell<span>.</span></a><span>Fashion, beauty & home finds worth saving.</span></footer>
+<dialog id="link-dialog">
+<form id="link-form"><div class="dialog-head"><h2>Add a link</h2><button type="button" id="close" aria-label="Close">×</button></div>
+<p>Save a Pinterest pin, TikTok video, or store page to your board.</p>
+<label>Link<input type="url" name="url" placeholder="https://…" required></label>
+<label>Title<input type="text" name="title" placeholder="e.g. Friday night top" maxlength="90" required></label>
+<label>Category<select name="category"><option>Going-out tops</option><option>Beauty & nails</option><option>Accessories</option><option>Room finds</option></select></label>
+<p id="link-error" role="alert"></p><button class="primary" type="submit">Save to my board</button>
+</form></dialog>
+<div id="status" role="status" aria-live="polite"></div>
+</body></html>
